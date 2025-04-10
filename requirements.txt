@@ -1,0 +1,16 @@
+torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu126
+huggingface_hub
+langchain
+langchain_huggingface
+langchain_core
+langchain_google_genai
+dotenv
+pandas
+numpy
+langchain_community
+faiss-cpu
+timm
+tiktoken
+verovio
+transformers=4.48.0
+peft
