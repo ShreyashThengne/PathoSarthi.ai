@@ -1,3 +1,67 @@
+"""
+This module provides classes and functions for interpreting pathology lab reports using large language models (LLMs) with retrieval-augmented generation (RAG) and conversational memory. It integrates Google Generative AI models, FAISS vector search, and HuggingFace embeddings to generate context-aware, human-readable explanations of lab results.
+
+Classes:
+    InMemoryHistory:
+        In-memory implementation of chat message history for conversational context.
+        Attributes:
+            messages (List[BaseMessage]): List of chat messages stored in memory.
+        Methods:
+            add_messages(messages: List[BaseMessage]) -> None:
+                Add a list of messages to the in-memory store.
+            clear() -> None:
+                Clear all messages from the in-memory history.
+
+    LLMWithMemory:
+        Wrapper for Large Language Models (LLMs) with session-based message history,
+        supporting prompt invocation with conversational memory.
+        Attributes:
+            store (dict): Maps session IDs to message histories.
+            model_name (str): Name of the LLM model to use.
+            llm: Instance of the GoogleGenerativeAI model.
+            chain_with_history: Runnable chain with message history support.
+        Methods:
+            get_by_session_id(session_id: str) -> BaseChatMessageHistory:
+                Retrieve or create a message history for a given session ID.
+            set_chain() -> None:
+                Set up the prompt and LLM chain with message history.
+            prompt_llm(question: str):
+                Invoke the LLM with the given question, using session-based memory.
+
+    InferenceModule:
+        Main interface for generating context from lab reports, retrieving relevant documents,
+        and producing final interpretations using RAG and LLMs.
+        Attributes:
+            all_report_data: The input lab report data.
+            chances_left (int): Number of attempts left to fetch additional context.
+            context (str): Accumulated context from retrieved documents.
+            id (int): Counter for document numbering.
+            embedding_model: Embedding model for vector search.
+            db: FAISS vector database instance.
+        Methods:
+            add_context(query, k=5):
+                Retrieve and append relevant documents to the context using a query.
+            generate_context():
+                Generate context for the lab report by iterative retrieval and LLM prompting.
+            run():
+                Generate the final interpretation and confidence level for the lab report.
+
+Functions:
+    convert_to_json(response):
+        Parses a string response containing JSON-like content and returns a Python dictionary.
+        Args:
+            response (str): The string response containing JSON-like content.
+        Returns:
+            dict: Parsed JSON content as a Python dictionary.
+
+Constants:
+    CONTEXT_DB_PATH: Path to the FAISS vector database for context retrieval.
+
+Usage:
+    - Instantiate InferenceModule with lab report data.
+    - Call run() to obtain an interpretation and confidence level based on the report and retrieved context.
+"""
+
 from operator import itemgetter
 from typing import List
 
@@ -35,11 +99,14 @@ class InMemoryHistory(BaseChatMessageHistory, BaseModel):
         self.messages.extend(messages)
 
     def clear(self) -> None:
+        """Clear all messages from the in-memory history."""
         self.messages = []
 
 
 
 class LLMWithMemory:
+    """Wrapper for LLMs with session-based message history, supporting prompt invocation with memory."""
+
     def __init__(self, model_name):
         self.store = {}
         self.model_name = model_name
@@ -47,11 +114,14 @@ class LLMWithMemory:
         self.set_chain()
 
     def get_by_session_id(self, session_id: str) -> BaseChatMessageHistory:
+        """Retrieve or create a message history for a given session ID."""
         if session_id not in self.store:
             self.store[session_id] = InMemoryHistory()
         return self.store[session_id]
 
     def set_chain(self):
+        """Set up the prompt and LLM chain with message history."""
+
         prompt = ChatPromptTemplate.from_messages([
             ("system", "You're a pathologist who's good at Interpreting pathology lab reports for domains: Hematology, Biochemistry, Clinical Pathology."),
             MessagesPlaceholder(variable_name="history"),
@@ -68,6 +138,8 @@ class LLMWithMemory:
         )
 
     def prompt_llm(self, question):
+        """Invoke the LLM with the given question, using session-based memory."""
+
         return self.chain_with_history.invoke(
             {"question": question},
             config={"configurable": {"session_id": "foo"}}
@@ -75,6 +147,8 @@ class LLMWithMemory:
 
 
 def convert_to_json(response):
+    """Parses a string response containing JSON-like content and returns a Python dictionary."""
+
     try:
         x = response.split("json\n")[1].split("\n")
     except:
@@ -89,6 +163,8 @@ def convert_to_json(response):
 
 CONTEXT_DB_PATH = "vectorstore/context_db"
 class InferenceModule:
+    """Main interface for generating context from lab reports, retrieving relevant documents, and producing final interpretations."""
+
     def __init__(self, all_report_data):
         self.all_report_data = all_report_data
         self.chances_left = 3
@@ -99,12 +175,16 @@ class InferenceModule:
         self.db = FAISS.load_local(CONTEXT_DB_PATH, self.embedding_model, allow_dangerous_deserialization=True)
 
     def add_context(self, query, k = 5):
+        """Retrieve and append relevant documents to the context using a query."""
+
         docs = self.db.similarity_search(query, k)
         for doc in docs:
             self.context += f"Document {self.id+1}: {doc.page_content}\n"
             self.id += 1
 
     def generate_context(self):
+        """Generate context for the lab report by iterative retrieval and LLM prompting."""
+
         llm = LLMWithMemory("gemini-2.0-flash")
 
         prompt = f"""Read through this lab report, which includes test results and brief inferences. Some inferences present in this report may be wrong so ignore those.
@@ -148,8 +228,10 @@ class InferenceModule:
         return self.context
 
     def run(self):
+        """Generate the final interpretation and confidence level for the lab report."""
+        
         self.generate_context()
-        llm = LLMWithMemory("gemini-2.5-pro-exp-03-25")
+        llm = LLMWithMemory("gemini-2.5-flash-preview-05-20")
 
         prompt = f"""
         You have been given a lab report. Interpret it using your knowledge and the context provided. Write your explanation in simple language so that anyone can understand it. Also, mention a conclusion stating what exactly is happening to the person

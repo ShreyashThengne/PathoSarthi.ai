@@ -1,3 +1,43 @@
+"""
+Module for processing medical lab reports using LLMs and vector search.
+Classes:
+    ProcessingReport: Handles the extraction, enrichment, and inference generation for lab report data.
+ProcessingReport:
+    Args:
+        data (dict): The lab report data, expected to contain a 'data' key with test records.
+        test_name (str): The name of the medical test being processed.
+    Attributes:
+        data (dict): The original input data.
+        records (list): List of test records extracted from data.
+        pipeline (transformers.Pipeline): HuggingFace pipeline for text generation.
+        terminators (list): List of token IDs used to terminate generation.
+        embedding_model (HuggingFaceEmbeddings): Embedding model for vector search.
+        db (FAISS): FAISS vector store for context retrieval.
+        test_name (str): Name of the test.
+        test_details (str): Short explanation of the test.
+    Methods:
+        load_models():
+            Loads the text generation pipeline, tokenizer, embedding model, and FAISS vector store.
+        get_inference_over_individual_test(test_name, record, context, test_details):
+            Generates a concise inference for a single test record using the LLM, given context and test details.
+        process():
+            Processes all records, enriches them with common names and context, generates inferences, and returns a structured report.
+        get_common_names(component):
+            Static method. Queries the LOINC API to retrieve the long common name and related names for a test component.
+        get_test_details(test_name):
+            Uses the LLM to generate a brief explanation of the test.
+Dependencies:
+    - transformers
+    - requests
+    - torch
+    - langchain_huggingface
+    - langchain_community
+    - langchain_core
+    - FAISS
+    - dotenv
+    - inference (local module)
+"""
+
 import transformers
 import requests
 from requests.auth import HTTPBasicAuth
@@ -20,19 +60,18 @@ MEDICAL_MODEL_PATH = "medical_llm/"
 
 
 class ProcessingReport:
+    """Handles the extraction, enrichment, and inference generation for lab report data."""
+
     def __init__(self, data, test_name):
         self.data = data
         self.records = self.data['data']
         self.load_models()
         self.test_name = test_name
         self.test_details = self.get_test_details(test_name)
-        # print(self.test)
-        # self.test_details = self.test['Explanation']
-        # self.test_type = self.test['Type']
-        # print(self.test_details)
-        # print(self.test_type)
         
     def load_models(self):
+        """Loads the text generation pipeline, tokenizer, embedding model, and FAISS vector store."""
+
         self.pipeline = transformers.pipeline(
             "text-generation",
             model=MEDICAL_MODEL_PATH,
@@ -48,6 +87,8 @@ class ProcessingReport:
 
 
     def get_inference_over_individual_test(self, test_name, record, context, test_details):
+        """Generates a concise inference for a single test record using the LLM, given context and test details."""
+
         prompt = f'''You have been given a record from a lab report of {test_name}. You must understand what components are used for this test and then perform the directed task.
         Details of test: {test_details}
         Records: {record}
@@ -95,6 +136,8 @@ class ProcessingReport:
 
 
     def process(self):
+        """Processes all records, enriches them with common names and context, generates inferences, and returns a structured report."""
+
         components = []
         for i in self.records:
             components.append(list(i.keys())[0])
@@ -136,6 +179,8 @@ class ProcessingReport:
 
     @staticmethod
     def get_common_names(component):
+        """Static method. Queries the LOINC API to retrieve the long common name and related names for a test component."""
+
         url = f"https://loinc.regenstrief.org/searchapi/loincs?query={component}"
         response = requests.get(url, auth=HTTPBasicAuth(USERNAME, PASSWORD))
 
@@ -151,6 +196,8 @@ class ProcessingReport:
 
 
     def get_test_details(self, test_name):
+        """Uses the LLM to generate a brief explanation of the test."""
+        
         prompt = f"What is {test_name} test? Explain in 2 line."
         messages = [
             {"role": "system", "content": "You are an expert trained on healthcare and Lab laboratory tests domain!"},

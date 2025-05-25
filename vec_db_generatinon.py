@@ -1,3 +1,19 @@
+"""
+Classes:
+    VectorDBGeneration: Handles the end-to-end process of creating a FAISS vector database from PDF documents.
+                        This class loads PDF files from a specified directory, splits them into manageable text chunks,
+                        generates embeddings using a HuggingFace model, and saves the resulting FAISS vector database locally.
+    Args:
+        db_faiss_path (str): Path where the FAISS vector database will be saved.
+        extension (str): File extension to filter documents (e.g., '.pdf').
+        books_path (str): Directory path containing the source PDF documents.
+    Methods:
+        load_pdfs(path): Loads PDF documents from the specified directory.
+        generate_chunks(documents): Splits documents into text chunks for embedding.
+        generate(): Orchestrates the loading, splitting, embedding, and saving of the vector database.
+        Initializes the VectorDBGeneration class with the specified database path, file extension, and source directory.
+"""
+
 from langchain_huggingface.embeddings.huggingface import HuggingFaceEmbeddings
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_community.document_loaders.directory import DirectoryLoader
@@ -11,6 +27,10 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 
 class VectorDBGeneration:
+    """Handles the end-to-end process of creating a FAISS vector database from PDF documents.
+    This class loads PDF files from a specified directory, splits them into manageable text chunks,
+    generates embeddings using a HuggingFace model, and saves the resulting FAISS vector database locally."""
+
     def __init__(self, db_faiss_path, extension, books_path):
         self.db_faiss_path = db_faiss_path
         self.file_type = f"*{extension}"
@@ -18,6 +38,8 @@ class VectorDBGeneration:
         self.embedding_model = HuggingFaceEmbeddings(model_name = "NeuML/pubmedbert-base-embeddings")
 
     def load_pdfs(self, path):
+        """Loads PDF documents from the specified directory."""
+
         loader = DirectoryLoader(
             path=path,
             glob=self.file_type,
@@ -28,12 +50,16 @@ class VectorDBGeneration:
 
     @staticmethod
     def generate_chunks(documents):
+        """Splits documents into text chunks for embedding."""
+
         text_splitter = RecursiveCharacterTextSplitter(chunk_size = 1000, chunk_overlap = 50)
         text_chunks = text_splitter.split_documents(documents)
 
         return text_chunks
     
     def generate(self):
+        """Orchestrates the loading, splitting, embedding, and saving of the vector database."""
+        
         docs = self.load_pdfs(self.books_path)
         doc_chunks = self.generate_chunks(docs)
 

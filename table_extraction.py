@@ -1,3 +1,21 @@
+"""
+Module for extracting tables from images using deep learning models.
+Classes:
+    ImageToTable
+        A class to detect and extract tabular data from images using pretrained models for table detection and data extraction.
+        Methods:
+        load_image(path):
+            Loads an image from the specified file path and converts it to RGB.
+        detect_table():
+            Detects tables in the loaded image, crops the detected table, and saves it as "table.jpg".
+            Draws a rectangle over the detected table in the original image.
+        extract_table(col_exist=True):
+            Extracts tabular data from the cropped table image using the data extraction model.
+            Cleans and parses the extracted LaTeX-like table format into a structured JSON format.
+            Handles tables with or without column headers.
+        free_up_gpu_mem():
+            Frees up GPU memory by deleting model and processor objects and clearing CUDA cache.
+"""
 from huggingface_hub import hf_hub_download
 from transformers import AutoImageProcessor, TableTransformerForObjectDetection
 from transformers import AutoModel, AutoTokenizer
@@ -5,11 +23,12 @@ import torch
 from PIL import Image, ImageDraw
 import pandas as pd
 import numpy as np
-# import pytesseract
 import re
 from peft import PeftModel
 
 class ImageToTable:
+    """A class to detect and extract tabular data from images using pretrained models for table detection and data extraction."""
+
     def __init__(self):
         self.table_detection_image_processor = AutoImageProcessor.from_pretrained("table_detection/")
         self.table_detection_model = TableTransformerForObjectDetection.from_pretrained("table_detection/")
@@ -23,12 +42,16 @@ class ImageToTable:
         # pytesseract.pytesseract.tesseract_cmd = r'C:\Users\shrey\0_Extra_Folders\tessaract\tesseract.exe'
 
     def load_image(self, path):
+        """Loads an image from the specified file path and converts it to RGB."""
+
         if not path:
             raise ValueError("No path provided!")
 
         self.image = Image.open(path).convert("RGB")
 
     def detect_table(self):
+        """Detects tables in the loaded image, crops the detected table, and saves it as "table.jpg". Draws a rectangle over the detected table in the original image."""
+
         if not self.image:
             raise ValueError("Please load the image!")
 
@@ -67,6 +90,8 @@ class ImageToTable:
         draw.rectangle(box, fill="black")
 
     def extract_table(self, col_exist = True):
+        """Extracts tabular data from the cropped table image using the data extraction model. Cleans and parses the extracted LaTeX-like table format into a structured JSON format. Handles tables with or without column headers."""
+
         replace_patterns1 = [r"\n", r"begin{tabular}", r"end{tabular}", r"\|c", r"\|l", r"\|"]
         replace_patterns2 = [r"\\", r"{", r"}", r"mathrm", r"\n", r":", r"begin{tabular}", r"end{tabular}", r"\|c", r"\|l", r"\|"]
 
@@ -242,6 +267,7 @@ class ImageToTable:
             
 
     def free_up_gpu_mem(self):
+        """Frees up GPU memory by deleting model and processor objects and clearing CUDA cache."""
         import gc
         del self.table_detection_image_processor, self.table_detection_model, self.data_extraction_model, self.data_extraction_tokenizer
         gc.collect()

@@ -1,3 +1,24 @@
+"""
+Main script for processing a medical report image and generating inference.
+Workflow:
+1. Loads a sample medical report image.
+2. Extracts tabular data from the image using the ImageToTable module.
+3. Processes the extracted data for a specific test (e.g., Complete Blood Count) using the ProcessingReport module.
+4. Runs inference on the processed report data using the InferenceModule.
+5. Prints the extracted data, inference results, and total processing time.
+Modules used:
+- table_extraction.ImageToTable: Handles image loading and table extraction.
+- processing_report.ProcessingReport: Processes extracted table data for a given test.
+- inference.InferenceModule: Performs inference on processed report data.
+Variables:
+- test_name: Name of the test to process (e.g., "Complete Blood Count (CBC)").
+- report_path: Path to the sample report image.
+- data: Extracted table data from the image.
+- all_report_data: Processed report data ready for inference.
+- inference: Result of the inference module.
+- time_taken: Total time taken for the process (in seconds).
+"""
+
 from table_extraction import ImageToTable
 from processing_report import ProcessingReport
 from inference import InferenceModule
