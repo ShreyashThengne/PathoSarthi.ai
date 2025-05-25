@@ -1,4 +1,4 @@
-<h1 align="center" id="title">PathoSarthi.ai (Under Progress)</h1>
+<h1 align="center" id="title">PathoSarthi.ai (Still working on it!)</h1>
 
 <p align="center"><img src="https://socialify.git.ci/ShreyashThengne/PathoSarthi.ai/image?custom_description=A+generative+AI+system+that+simplifies+Pathology+lab+reports+into+personalized+health+insights.&amp;description=1&amp;font=Source+Code+Pro&amp;issues=1&amp;name=1&amp;pattern=Formal+Invitation&amp;pulls=1&amp;stargazers=1&amp;theme=Auto" alt="project-image"></p>
 
