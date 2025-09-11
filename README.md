@@ -2,7 +2,7 @@
 
 <p align="center"><img src="https://socialify.git.ci/ShreyashThengne/PathoSarthi.ai/image?custom_description=A+generative+AI+system+that+simplifies+Pathology+lab+reports+into+personalized+health+insights.&amp;description=1&amp;font=Source+Code+Pro&amp;issues=1&amp;name=1&amp;pattern=Formal+Invitation&amp;pulls=1&amp;stargazers=1&amp;theme=Auto" alt="project-image"></p>
 
-<p id="description">Our product uses generative AI to interpret laboratory reports by extracting standardizing and contextualizing medical data. It converts raw diagnostic content into structured insights and personalized summaries enabling users to easily understand their health information. By simplifying complex medical language and offering relevant guidance the system empowers individuals to make informed decisions and engage more confidently in their healthcare journey.</p>
+<p id="description">This product uses generative AI to interpret laboratory reports by extracting standardizing and contextualizing medical data. It converts raw diagnostic content into structured insights and personalized summaries enabling users to easily understand their health information. By simplifying complex medical language and offering relevant guidance the system empowers individuals to make informed decisions and engage more confidently in their healthcare journey.</p>
 (This is my work in the project. I didnt work on website, so didnt include it. Project is not deployed on cloud.)
 <h2>🛠️ Installation Steps:</h2>
 
