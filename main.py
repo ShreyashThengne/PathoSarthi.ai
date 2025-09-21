@@ -24,23 +24,55 @@ from processing_report import ProcessingReport
 from inference import InferenceModule
 import time
 
+import streamlit as st
+import pandas as pd
+import numpy as np
+
+
+st.title("PathoSarthi")
+st.markdown("#### A generativeAI system that simplifies Pathology lab reports into personalized health insights")
+
+st.write("")
+st.write("")
+st.write("")
+st.write("")
 start_time = time.time()
 test_name = "Complete Blood Count (CBC)"
-report_path = "samples/sample_report1.jpg"
 
-img_to_table = ImageToTable()
-img_to_table.load_image(report_path)
-img_to_table.detect_table()
-data = img_to_table.extract_table()
+input_container = st.empty()
+with input_container.container():
+    report_path = st.text_input("Enter the path to the report: ")
+    analyse_botton = st.button("Analyse")
+# report_path = "samples/sample_report1.jpg"
 
-print("Data: ", data)
+if analyse_botton:
+    my_progress_bar = st.progress(0)
+    img_to_table = ImageToTable()
+    img_to_table.load_image(report_path)
 
-processing_report = ProcessingReport(data, test_name)
+    img_to_table.detect_table()
+    my_progress_bar.progress(16)
 
-all_report_data = processing_report.process()
-inference_module = InferenceModule(all_report_data)
-inference = inference_module.run()
+    data = img_to_table.extract_table()
+    my_progress_bar.progress(33)
 
-print("Inference: ", inference)
-time_taken = time.time() - start_time
-print("Time taken: ", time_taken)
+    processing_report = ProcessingReport(data, test_name)
+    my_progress_bar.progress(50)
+
+    all_report_data = processing_report.process()
+    my_progress_bar.progress(66)
+    
+    inference_module = InferenceModule(all_report_data)
+    my_progress_bar.progress(83)
+
+    inference = inference_module.run()
+    my_progress_bar.progress(100)
+    my_progress_bar.empty()
+    # input_container.empty()
+
+    st.write(f"**Confidence Level: {inference['confidence_level'].capitalize()}**")
+    st.markdown("**Inference:**")
+    st.write(inference['interpretation'].replace("**", "").replace("*  ", "\n•"))
+    # print("Inference: ", inference)
+    time_taken = time.time() - start_time
+    st.write("Time taken: ", time_taken)

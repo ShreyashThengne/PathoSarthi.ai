@@ -52,8 +52,8 @@ import os, dotenv
 from inference import convert_to_json
 
 dotenv.load_dotenv()
-USERNAME=os.getenv('USERNAME')
-PASSWORD=os.getenv('PASSWORD')
+LOINC_USERNAME=os.getenv('LOINC_USERNAME')
+LOINC_PASSWORD=os.getenv('LOINC_PASSWORD')
 HF_TOKEN = os.getenv('HF_TOKEN')
 DB_FAISS_PATH = "vectorstore/reference_range_db"
 MEDICAL_MODEL_PATH = "medical_llm/"
@@ -182,7 +182,7 @@ class ProcessingReport:
         """Static method. Queries the LOINC API to retrieve the long common name and related names for a test component."""
 
         url = f"https://loinc.regenstrief.org/searchapi/loincs?query={component}"
-        response = requests.get(url, auth=HTTPBasicAuth(USERNAME, PASSWORD))
+        response = requests.get(url, auth=HTTPBasicAuth(LOINC_USERNAME, LOINC_PASSWORD))
 
         if response.status_code == 200:
             res = response.json()
